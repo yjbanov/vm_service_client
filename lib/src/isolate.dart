@@ -264,6 +264,17 @@ class VMIsolateRef {
     }
   }
 
+  /// Makes a raw RPC to the VM isolate corresponding to the ID [number].
+  ///
+  /// [method] must correspond either to a built-in VM service method or to a
+  /// custom VM service extension installed on the VM isolate.
+  ///
+  /// [params] are passed to the extension handler and must be serializable to
+  /// a JSON string.
+  Future<Map> sendRequest(String method, [Map<String, Object> params]) async {
+    return _scope.sendRequest(method, params);
+  }
+
   bool operator ==(other) => other is VMIsolateRef &&
       other._scope.isolateId == _scope.isolateId;
 

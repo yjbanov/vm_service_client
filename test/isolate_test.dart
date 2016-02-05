@@ -375,6 +375,20 @@ void main() {
       expect(breakpoint.number, equals(1));
     });
   });
+
+  group("sendRequest", () {
+    test("forwards to scope", () async {
+      var client = await runAndConnect(main: r"""
+        registerExtension('ping', (_, __) async {
+          return new ServiceExtensionResponse.result('{"type": "pong"}');
+        });
+      """);
+
+      var isolate = await (await client.getVM()).isolates.first.loadRunnable();
+      Map response = await isolate.sendRequest('ping');
+      expect(response, {'type': 'pong'});
+    });
+  });
 }
 
 /// Starts a client with two unpaused empty isolates.
