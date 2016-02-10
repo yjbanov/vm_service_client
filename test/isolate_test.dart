@@ -394,6 +394,29 @@ void main() {
       Map response = await isolate.invokeExtension('ext.ping');
       expect(response, {'type': 'pong'});
     });
+
+    test("passes parameters", () async {
+      var client = await runAndConnect(main: r"""
+        registerExtension('ext.params', (_, params) async {
+          return new ServiceExtensionResponse.result('''{
+            "type": "params",
+            "foo": "${params['foo']}",
+            "baz": "${params['baz']}"
+          }''');
+        });
+      """);
+
+      var isolate = await (await client.getVM()).isolates.first.loadRunnable();
+      Map response = await isolate.invokeExtension('ext.params', {
+        'foo': 'bar',
+        'baz': 1,  // VM service string-encodes parameter values
+      });
+      expect(response, {
+        'type': 'params',
+        'foo': 'bar',
+        'baz': '1',
+      });
+    });
   });
 }
 

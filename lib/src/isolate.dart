@@ -274,7 +274,8 @@ class VMIsolateRef {
   /// a JSON string.
   Future<Map> invokeExtension(String method, [Map<String, Object> params]) {
     if (!method.startsWith('ext.')) {
-      throw new ArgumentError('Extension method names must begin with "ext." prefix: ${method}');
+      throw new ArgumentError.value(method, 'method',
+          'must begin with "ext." prefix');
     }
     return _scope.sendRequest(method, params);
   }
