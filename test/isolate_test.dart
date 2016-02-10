@@ -376,16 +376,22 @@ void main() {
     });
   });
 
-  group("sendRequest", () {
+  group("invokeExtension", () {
+    test("enforces ext. prefix", () async {
+      var client = await runAndConnect();
+      var isolate = await (await client.getVM()).isolates.first.loadRunnable();
+      expect(() => isolate.invokeExtension('noprefix'), throwsArgumentError);
+    });
+
     test("forwards to scope", () async {
       var client = await runAndConnect(main: r"""
-        registerExtension('ping', (_, __) async {
+        registerExtension('ext.ping', (_, __) async {
           return new ServiceExtensionResponse.result('{"type": "pong"}');
         });
       """);
 
       var isolate = await (await client.getVM()).isolates.first.loadRunnable();
-      Map response = await isolate.sendRequest('ping');
+      Map response = await isolate.invokeExtension('ext.ping');
       expect(response, {'type': 'pong'});
     });
   });

@@ -264,14 +264,18 @@ class VMIsolateRef {
     }
   }
 
-  /// Makes a raw RPC to the VM isolate corresponding to the ID [number].
+  /// Makes a raw RPC to a VM service extension registered in the isolate
+  /// corresponding to the ID [number].
   ///
-  /// [method] must correspond either to a built-in VM service method or to a
-  /// custom VM service extension installed on the VM isolate.
+  /// [method] must correspond to a VM service extension installed on the VM
+  /// isolate and it must begin with prefix "ext.".
   ///
   /// [params] are passed to the extension handler and must be serializable to
   /// a JSON string.
-  Future<Map> sendRequest(String method, [Map<String, Object> params]) async {
+  Future<Map> invokeExtension(String method, [Map<String, Object> params]) {
+    if (!method.startsWith('ext.')) {
+      throw new ArgumentError('Extension method names must begin with "ext." prefix: ${method}');
+    }
     return _scope.sendRequest(method, params);
   }
 
