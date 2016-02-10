@@ -26,6 +26,7 @@ export 'src/code.dart' hide newVMCodeRef;
 export 'src/context.dart' hide newVMContextRef;
 export 'src/error.dart' hide newVMError, newVMErrorRef;
 export 'src/exceptions.dart';
+export 'src/extension.dart' show VMServiceExtension;
 export 'src/field.dart' hide newVMFieldRef;
 export 'src/flag.dart' hide newVMFlagList;
 export 'src/frame.dart' hide newVMFrame;

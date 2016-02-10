@@ -19,6 +19,7 @@ import 'sentinel.dart';
 import 'stack.dart';
 import 'stream_manager.dart';
 import 'utils.dart';
+import 'extension.dart';
 
 VMIsolateRef newVMIsolateRef(rpc.Peer peer, StreamManager streams, Map json) {
   if (json == null) return null;
@@ -86,6 +87,11 @@ class VMIsolateRef {
   Stream<List<int>> get stderr => _stderr;
   Stream<List<int>> _stderr;
 
+  /// A broadcast stream that emits the name of VM service extensions
+  Stream<VMServiceExtension> get onServiceExtensionAdded =>
+      _onServiceExtensionAdded;
+  Stream<VMServiceExtension> _onServiceExtensionAdded;
+
   /// A future that fires when the isolate exits.
   ///
   /// If the isolate has already exited, this will complete immediately.
@@ -124,6 +130,11 @@ class VMIsolateRef {
     _onUpdate = _transform(_scope.streams.isolate, (json, sink) {
       if (json["kind"] != "IsolateUpdate") return;
       sink.add(new VMIsolateRef._(_scope, json["isolate"]));
+    });
+
+    _onServiceExtensionAdded = _transform(_scope.streams.isolate, (json, sink) {
+      if (json["kind"] != "ServiceExtensionAdded") return;
+      sink.add(newVMServiceExtension(json["extensionRPC"]));
     });
 
     _onPauseOrResume = _transform(_scope.streams.debug, (json, sink) {
@@ -264,7 +275,7 @@ class VMIsolateRef {
     }
   }
 
-  /// Makes a raw RPC to a VM service extension registered in the isolate
+  /// Makes a raw RPC to a VM service extension registered in this isolate
   /// corresponding to the ID [number].
   ///
   /// [method] must correspond to a VM service extension installed on the VM
@@ -272,7 +283,7 @@ class VMIsolateRef {
   ///
   /// [params] are passed to the extension handler and must be serializable to
   /// a JSON string.
-  Future<Map> invokeExtension(String method, [Map<String, Object> params]) {
+  Future<Object> invokeExtension(String method, [Map<String, String> params]) {
     if (!method.startsWith('ext.')) {
       throw new ArgumentError.value(method, 'method',
           'must begin with "ext." prefix');

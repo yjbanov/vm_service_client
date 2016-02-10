@@ -165,6 +165,19 @@ void main() {
         expect(other.onExit, completes);
       });
     });
+
+    test("onServiceExtensionAdded fires when an extension is added", () async {
+      client = await runAndConnect(main: """
+        registerExtension('ext.test', (_, __) {});
+      """, flags: ["--pause-isolates-on-start"]);
+
+      var isolate = await (await client.getVM()).isolates.first.loadRunnable();
+      await isolate.waitUntilPaused();
+      await isolate.resume();
+
+      VMServiceExtension ext = await isolate.onServiceExtensionAdded.first;
+      expect(ext.method, 'ext.test');
+    });
   });
 
   group("loadRunnable", () {
@@ -391,7 +404,7 @@ void main() {
       """);
 
       var isolate = await (await client.getVM()).isolates.first.loadRunnable();
-      Map response = await isolate.invokeExtension('ext.ping');
+      var response = await isolate.invokeExtension('ext.ping');
       expect(response, {'type': 'pong'});
     });
 
@@ -399,22 +412,17 @@ void main() {
       var client = await runAndConnect(main: r"""
         registerExtension('ext.params', (_, params) async {
           return new ServiceExtensionResponse.result('''{
-            "type": "params",
-            "foo": "${params['foo']}",
-            "baz": "${params['baz']}"
+            "foo": "${params['foo']}"
           }''');
         });
       """);
 
       var isolate = await (await client.getVM()).isolates.first.loadRunnable();
-      Map response = await isolate.invokeExtension('ext.params', {
+      var response = await isolate.invokeExtension('ext.params', {
         'foo': 'bar',
-        'baz': 1,  // VM service string-encodes parameter values
       });
       expect(response, {
-        'type': 'params',
         'foo': 'bar',
-        'baz': '1',
       });
     });
   });
